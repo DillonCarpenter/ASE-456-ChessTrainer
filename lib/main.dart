@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
+import "package:chess/chess.dart";
 
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
+  Chess chess = new Chess();
+  while (!chess.game_over) {
+    print('position: ' + chess.fen);
+    print(chess.ascii);
+    var moves = chess.moves();
+    moves.shuffle();
+    var move = moves[0];
+    chess.move(move);
+    print('move: ' + move);
   }
 }
+
