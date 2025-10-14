@@ -7,15 +7,24 @@ environment:
   sdk: ^3.9.0
 
 dependencies:
+  dartchess_webok: ^0.2.2
   flutter:
     sdk: flutter
-  chess: ^0.8.1
+  flutter_chess_board: ^1.0.1
   multistockfish: ^0.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+dependency_overrides:
+  characters: ^1.4.1
+  material_color_utilities: ^0.13.0
+  meta: ^1.17.0
+  test_api: ^0.7.7
+  fast_immutable_collections: ^11.0.4
+  chess: ^0.8.1
 
 flutter:
   uses-material-design: true
