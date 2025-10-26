@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multistockfish/multistockfish.dart'; // gives us Stockfish, StockfishFlavor, StockfishState
-import 'package:dartchess_webok/dartchess_webok.dart' as dc;
+import 'package:dartchess/dartchess.dart';
+import 'package:chessground/chessground.dart'; //UI
 import 'dart:async';
 
 void main() => runApp(const ChessApp());
@@ -99,7 +100,6 @@ class _ChessAppState extends State<ChessApp> {
     debugPrint('Best move: $result');
     return result;
   }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -155,6 +155,9 @@ class _ChessAppState extends State<ChessApp> {
                       if (_userFen != null && _userFen!.isNotEmpty)
                         Text('Received FEN:\n$_userFen',
                             textAlign: TextAlign.center)
+                      ,
+                      if (_userFen != null && _userFen!.isNotEmpty)
+                        Chessboard.fixed(size: 200, orientation: Side.white, fen: _userFen!)
                       ,
                       if (_bestMove != null)
                         Text('Best move: $_bestMove', textAlign: TextAlign.center)      
