@@ -4,9 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class StockfishHelper {
   late final Stockfish _engine;
-  bool _ready = false;
-
-  bool get isReady => _ready;
+  final ValueNotifier<bool> isReady = ValueNotifier(false);
 
   Future<void> initialize() async {
     _engine = Stockfish(flavor: StockfishFlavor.sf16);
@@ -22,7 +20,7 @@ class StockfishHelper {
       debugPrint('Stockfish state: $state');
 
       if (state == StockfishState.ready) {
-        _ready = true;
+        isReady.value = true;
         // Basic UCI handshake
         _engine.stdin = 'uci';
         _engine.stdin = 'isready';
@@ -31,7 +29,7 @@ class StockfishHelper {
   }
 
   Future<String?> analyzeFen(String fen, {int depth = 15}) async {
-    if (!_ready) {
+    if (!isReady.value) {
       debugPrint('Engine not ready yet.');
       return null;
     }

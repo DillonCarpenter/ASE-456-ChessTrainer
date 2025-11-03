@@ -3,6 +3,7 @@ import 'package:multistockfish/multistockfish.dart'; // gives us Stockfish, Stoc
 import 'package:dartchess/dartchess.dart';
 import 'package:chessground/chessground.dart'; //UI
 import 'dart:async';
+import 'package:chess_trainer/service/stockfish_service.dart';
 
 void main() => runApp(const ChessApp());
 
@@ -14,19 +15,21 @@ class ChessApp extends StatefulWidget {
 }
 
 class _ChessAppState extends State<ChessApp> {
-  Stockfish? _engine;
-  bool _engineReady = false;
+  //Stockfish? _engine;
+  final StockfishHelper _engine = StockfishHelper();
+  //bool _engineReady = false;
 
   final TextEditingController _fenController = TextEditingController();
   String? _userFen;
   String? _bestMove;
-
+  
   @override
   void initState() {
     super.initState();
-    _initEngine();
+    _engine.initialize();
   }
-
+  
+  /*
   Future<void> _initEngine() async {
     // Create the engine (only one allowed)
     final engine = Stockfish(flavor: StockfishFlavor.sf16);
@@ -50,16 +53,18 @@ class _ChessAppState extends State<ChessApp> {
       }
     });
 
-    _engine = engine;
+    //_engine = engine;
   }
-
+  */
+  
   @override
   void dispose() {
-    _engine?.dispose();
+    _engine.dispose();
     _fenController.dispose();
     super.dispose();
   }
-
+  
+  /*
   Future<String?> analyzeFen(String fen, {int depth = 15}) async {
     if (!_engineReady) {
       debugPrint('Engine not ready');
@@ -90,7 +95,7 @@ class _ChessAppState extends State<ChessApp> {
         sub.cancel(); // Stop listening once bestmove is found
       }
     });
-
+    
     // Send FEN and start analysis
     _engine!.stdin = 'position fen $fen';
     _engine!.stdin = 'go depth $depth';
@@ -100,73 +105,72 @@ class _ChessAppState extends State<ChessApp> {
     debugPrint('Best move: $result');
     return result;
   }
+  */
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Stockfish FEN Demo',
       home: Scaffold(
         appBar: AppBar(title: const Text('Stockfish FEN Input')),
-        body: Center(
-          child: !_engineReady
-              ? const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Starting Stockfish engine...'),
-                  ],
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Enter a FEN string:',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _fenController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText:
-                              'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final fen = _fenController.text.trim();
-                          debugPrint(_engineReady.toString());
-
-                          if (_engineReady) {
-                            final bestMove = await analyzeFen(fen);
-
-                            setState(() {
-                              _userFen = fen;
-                              _bestMove = bestMove;
-                            });
-                          }
-                        },
-                        child: const Text('Submit FEN'),
-                      ),
-                      const SizedBox(height: 20),
-                      if (_userFen != null && _userFen!.isNotEmpty)
-                        Text('Received FEN:\n$_userFen',
-                            textAlign: TextAlign.center)
-                      ,
-                      if (_userFen != null && _userFen!.isNotEmpty)
-                        Chessboard.fixed(size: 200, orientation: Side.white, fen: _userFen!)
-                      ,
-                      if (_bestMove != null)
-                        Text('Best move: $_bestMove', textAlign: TextAlign.center)      
-                      ,
-                    ],
+        body: ValueListenableBuilder(valueListenable: _engine.isReady, builder:(context, ready, _) {
+          return !ready 
+          ? const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Starting Stockfish engine...'),
+                ],
+            )
+          :Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Enter a FEN string:',
+                style: TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 12),
+                TextField(
+                  controller: _fenController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                     hintText: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
                   ),
                 ),
-        ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    final fen = _fenController.text.trim();
+                    debugPrint(_engine.isReady.toString());
+                    if (_engine.isReady.value) {
+                      final bestMove = await _engine.analyzeFen(fen);
+                      setState(() {
+                        _userFen = fen;
+                        _bestMove = bestMove;
+                      });
+                    }
+                  },
+                  child: const Text('Submit FEN'),
+                ),
+                const SizedBox(height: 20),
+                if (_userFen != null && _userFen!.isNotEmpty)
+                  Text('Received FEN:\n$_userFen',
+                    textAlign: TextAlign.center)
+                  ,
+                if (_userFen != null && _userFen!.isNotEmpty)
+                  Chessboard.fixed(size: 200, orientation: Side.white, fen: _userFen!)
+                  ,
+                if (_bestMove != null)
+                  Text('Best move: $_bestMove', textAlign: TextAlign.center)      
+                  ,
+              ],
+            ),
+          );
+        }) 
       ),
     );
   }
 }
+
