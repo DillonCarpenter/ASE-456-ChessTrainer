@@ -42,9 +42,9 @@ class _ChessGUIState extends State<ChessGUI> {
 
   Future<void> _analyzeCurrent() async {
     final fen = _fens[_currentIndex];
-    final bestMove = await widget.stockfish.analyzeFen(fen);
+    final analysis = await widget.stockfish.analyzeFen(fen);
     if (mounted) {
-      setState(() => _bestMove = bestMove);
+      setState(() => _bestMove = analysis!.bestMove);
     }
   }
 
