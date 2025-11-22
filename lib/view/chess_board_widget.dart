@@ -18,6 +18,7 @@ class ChessGUI extends StatefulWidget {
 
   @override
   State<ChessGUI> createState() => _ChessGUIState();
+
 }
 
 class _ChessGUIState extends State<ChessGUI> {
@@ -38,6 +39,19 @@ class _ChessGUIState extends State<ChessGUI> {
     }
 
     _analyzeCurrent();
+  }
+
+  @override
+  void didUpdateWidget(covariant ChessGUI oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.pgn != oldWidget.pgn && widget.pgn != null && widget.pgn!.isNotEmpty) {
+      _fens = _createMultipleFENs(widget.pgn!);
+      _analyzeCurrent();
+    } else if (widget.fen != oldWidget.fen && widget.fen != null && widget.fen!.isNotEmpty) {
+      _fens = [widget.fen!];
+      _analyzeCurrent();
+    }
   }
 
   Future<void> _analyzeCurrent() async {
@@ -68,10 +82,15 @@ class _ChessGUIState extends State<ChessGUI> {
     final moves = chess.history;
     final chess1 = ChessLibrary.Chess();
 
-    return moves.map((move) {
+    var FENS = moves.map((move) {
       chess1.move(move);
       return chess1.fen;
     }).toList();
+    debugPrint("_createMultipleFENs output: ");
+    for (var f in FENS) debugPrint(f);
+    debugPrint("Inserted PGN:");
+    debugPrint(pgn);
+    return FENS;
   }
 
   @override
@@ -82,6 +101,7 @@ class _ChessGUIState extends State<ChessGUI> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Chessboard.fixed(
+          key: ValueKey(fen),
           size: 300,
           orientation: Side.white,
           fen: fen,
