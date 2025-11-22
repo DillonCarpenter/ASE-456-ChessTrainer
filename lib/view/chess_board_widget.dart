@@ -46,7 +46,13 @@ class _ChessGUIState extends State<ChessGUI> {
     super.didUpdateWidget(oldWidget);
 
     if (widget.pgn != oldWidget.pgn && widget.pgn != null && widget.pgn!.isNotEmpty) {
+      debugPrint('--- PGN START ---');
+      debugPrint('[${widget.pgn}]');  // brackets make whitespace/newlines visible
+      debugPrint('--- PGN END ---');
+      debugPrint('PGN length: ${widget.pgn?.length}');
       _fens = _createMultipleFENs(widget.pgn!);
+      debugPrint('FENS after being inserted into _createMultipleFENs');
+      for (var f in _fens) debugPrint(f);
       _analyzeCurrent();
     } else if (widget.fen != oldWidget.fen && widget.fen != null && widget.fen!.isNotEmpty) {
       _fens = [widget.fen!];
@@ -80,6 +86,8 @@ class _ChessGUIState extends State<ChessGUI> {
     final chess = ChessLibrary.Chess();
     chess.load_pgn(pgn);
     final moves = chess.history;
+    print("moves");
+    print(moves.length);
     final chess1 = ChessLibrary.Chess();
 
     var FENS = moves.map((move) {
@@ -87,9 +95,7 @@ class _ChessGUIState extends State<ChessGUI> {
       return chess1.fen;
     }).toList();
     debugPrint("_createMultipleFENs output: ");
-    for (var f in FENS) debugPrint(f);
-    debugPrint("Inserted PGN:");
-    debugPrint(pgn);
+
     return FENS;
   }
 

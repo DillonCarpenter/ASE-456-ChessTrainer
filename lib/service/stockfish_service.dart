@@ -31,7 +31,7 @@ class StockfishHelper {
 
   Future<EngineAnalysis?> analyzeFen(
     String fen, {
-    int depth = 15,
+    int depth = 3,
     int pv = 3,
   }) async {
     if (!isReady.value) {
