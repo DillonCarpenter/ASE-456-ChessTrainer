@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:multistockfish/multistockfish.dart'; // gives us Stockfish, StockfishFlavor, StockfishState
-import 'package:dartchess_webok/dartchess_webok.dart' as dc;
+import 'package:dartchess/dartchess.dart'; //FEN to PGN and vise versa
+import 'package:chessground/chessground.dart'; //UI
 import 'dart:async';
+import 'package:chess_trainer/service/stockfish_service.dart'; // gives us Stockfish, StockfishFlavor, StockfishState through abstraction
+import 'package:chess_trainer/view/chess_board_widget.dart';
 
 void main() => runApp(const ChessApp());
 
@@ -13,157 +15,117 @@ class ChessApp extends StatefulWidget {
 }
 
 class _ChessAppState extends State<ChessApp> {
-  Stockfish? _engine;
-  bool _engineReady = false;
+  //Stockfish? _engine;
+  final StockfishHelper _engine = StockfishHelper();
+  //bool _engineReady = false;
 
   final TextEditingController _fenController = TextEditingController();
+  final TextEditingController _pgnController = TextEditingController();
   String? _userFen;
-  String? _bestMove;
+  String? _userPgn;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  
   @override
   void initState() {
     super.initState();
-    _initEngine();
+    _engine.initialize();
   }
-
-  Future<void> _initEngine() async {
-    // Create the engine (only one allowed)
-    final engine = Stockfish(flavor: StockfishFlavor.sf16);
-
-    // Listen to stdout for debugging
-    engine.stdout.listen((line) {
-      debugPrint('[Stockfish] $line');
-    });
-
-    // React to state changes
-    engine.state.addListener(() {
-      final state = engine.state.value;
-      debugPrint('Stockfish state: $state');
-
-      if (state == StockfishState.ready) {
-        setState(() => _engineReady = true);
-
-        // Basic UCI handshake
-        engine.stdin = 'uci';
-        engine.stdin = 'isready';
-      }
-    });
-
-    _engine = engine;
-  }
-
+  
   @override
   void dispose() {
-    _engine?.dispose();
+    _engine.dispose();
     _fenController.dispose();
+    _pgnController.dispose();
     super.dispose();
   }
-
-  Future<String?> analyzeFen(String fen, {int depth = 15}) async {
-    if (!_engineReady) {
-      debugPrint('Engine not ready');
-      return null;
-    }
-
-    // Clear previous output (optional, for clarity)
-    debugPrint('--- Analyzing FEN ---');
-    debugPrint(fen);
-
-    final completer = Completer<String?>();
-    String? bestMove;
-
-    // Listen for Stockfish output
-    late final StreamSubscription sub;
-    sub = _engine!.stdout.listen((line) {
-      debugPrint('[Stockfish] $line');
-
-      // Check for the bestmove line
-      if (line.startsWith('bestmove')) {
-        final parts = line.split(' ');
-        if (parts.length >= 2) {
-          bestMove = parts[1];
-          completer.complete(bestMove);
-        } else {
-          completer.complete(null);
-        }
-        sub.cancel(); // Stop listening once bestmove is found
-      }
-    });
-
-    // Send FEN and start analysis
-    _engine!.stdin = 'position fen $fen';
-    _engine!.stdin = 'go depth $depth';
-
-    // Wait for Stockfish to respond with bestmove
-    final result = await completer.future;
-    debugPrint('Best move: $result');
-    return result;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Stockfish FEN Demo',
       home: Scaffold(
         appBar: AppBar(title: const Text('Stockfish FEN Input')),
-        body: Center(
-          child: !_engineReady
-              ? const Column(
+        body: ValueListenableBuilder(valueListenable: _engine.isReady, builder:(context, ready, _) {
+          return !ready 
+          ? const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Starting Stockfish engine...'),
+                ],
+            )
+          :SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey, // define GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Starting Stockfish engine...'),
-                  ],
-                )
-              : Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Enter a FEN string:',
-                        style: TextStyle(fontSize: 18),
+                    const Text(
+                      'Enter a FEN or PGN string:',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _fenController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'FEN',
                       ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _fenController,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText:
-                              'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-                        ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _pgnController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'PGN',
                       ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final fen = _fenController.text.trim();
-                          debugPrint(_engineReady.toString());
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final fen = _fenController.text.trim();
+                        final pgn = _pgnController.text.trim();
 
-                          if (_engineReady) {
-                            final bestMove = await analyzeFen(fen);
+                        if (fen.isEmpty && pgn.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter either a FEN or PGN.')),
+                          );
+                          return;
+                        }
 
+                        if (fen.isNotEmpty) {
+                          if (_engine.isReady.value) {
                             setState(() {
                               _userFen = fen;
-                              _bestMove = bestMove;
+                              _userPgn = ''; // clear PGN if FEN entered
                             });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Engine is not ready yet.')),
+                            );
                           }
-                        },
-                        child: const Text('Submit FEN'),
-                      ),
-                      const SizedBox(height: 20),
-                      if (_userFen != null && _userFen!.isNotEmpty)
-                        Text('Received FEN:\n$_userFen',
-                            textAlign: TextAlign.center)
-                      ,
-                      if (_bestMove != null)
-                        Text('Best move: $_bestMove', textAlign: TextAlign.center)      
-                      ,
-                    ],
-                  ),
+                        } else if (pgn.isNotEmpty) {
+                          setState(() {
+                            _userPgn = pgn;
+                            _userFen = ''; // clear FEN if PGN entered
+                          });
+                        }
+                      },
+                      child: const Text('Submit Position'),
+                    ),
+                    const SizedBox(height: 20),
+                    ChessGUI(stockfish: _engine, fen: _userFen, pgn: _userPgn),
+                  ],
                 ),
-        ),
+              )
+            )
+          );
+        }) 
       ),
     );
   }
 }
+

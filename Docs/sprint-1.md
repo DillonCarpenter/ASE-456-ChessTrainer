@@ -60,8 +60,9 @@ Dillon Carpenter
 ### Timeline and Milestones
 - Week 1: Finish PGN/FEN support feature and it's requirements
 - Week 2: Finish Board Visualization feature and its requirements
-- Week 3: Move labeling Motif detection (Common/Simple ones for now)
-- Week 4: UI improvements/Flex week
+- Week 3: Stockfish detects and labels moves as mistakes, blunders, great moves, etc...
+- Week 4:  Rest of Motif Detection and Displaying Requirements
+- Week 5: UI improvements/Flex week
 ---
 ### Key Dates
 - Unit Testing: End of each week

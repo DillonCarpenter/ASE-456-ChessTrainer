@@ -7,10 +7,11 @@ environment:
   sdk: ^3.9.0
 
 dependencies:
-  dartchess_webok: ^0.2.2
+  chess: ^0.8.1
+  chessground: ^7.2.0
+  dartchess: ^0.11.1
   flutter:
     sdk: flutter
-  flutter_chess_board: ^1.0.1
   multistockfish: ^0.3.0
 
 dev_dependencies:
