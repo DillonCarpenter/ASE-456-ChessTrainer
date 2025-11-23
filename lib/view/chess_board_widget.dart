@@ -1,8 +1,11 @@
+import 'package:chess_trainer/model/stockfish_data_model.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:chessground/chessground.dart';
 import 'package:chess/chess.dart' as ChessLibrary;
 import 'package:chess_trainer/service/stockfish_service.dart';
+import 'package:chess_trainer/model/motif_model.dart';
+import 'package:chess_trainer/service/motif_detector_service.dart';
 
 class ChessGUI extends StatefulWidget {
   final String? fen;
@@ -25,6 +28,8 @@ class _ChessGUIState extends State<ChessGUI> {
   late List<String> _fens;
   int _currentIndex = 0;
   String? _bestMove;
+  Map<int, List<Motif>>? _motifResults;
+  EngineAnalysis? _analysis;
 
   @override
   void initState() {
@@ -63,10 +68,23 @@ class _ChessGUIState extends State<ChessGUI> {
   Future<void> _analyzeCurrent() async {
     final fen = _fens[_currentIndex];
     final analysis = await widget.stockfish.analyzeFen(fen);
-    if (mounted) {
-      setState(() => _bestMove = analysis!.bestMove);
-    }
+
+    if (analysis == null) return;
+
+    // 1. Run motif detection
+    final detector = MotifDetector(analysis);
+    final motifs = detector.detectMotifs(); // returns Map<int, List<Motif>>
+
+    if (!mounted) return;
+
+    // 2. Store everything in state
+    setState(() {
+      _bestMove = analysis.bestMove;
+      _motifResults = motifs;
+      _analysis = analysis; // optional, if not already stored
+    });
   }
+
 
   void _next() {
     if (_currentIndex < _fens.length - 1) {
@@ -81,6 +99,72 @@ class _ChessGUIState extends State<ChessGUI> {
       _analyzeCurrent();
     }
   }
+
+  Widget _buildPvDisplay(
+    PvLine pv,
+    List<Motif> motifs,
+  ) {
+    final finalMotif = motifs.last;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("PV ${pv.multipv} (depth: ${pv.depth})",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                )),
+            const SizedBox(height: 8),
+
+            // MOVES
+            Text("Moves: ${pv.pv.join(' ')}"),
+
+            const SizedBox(height: 8),
+
+            // EVALUATION
+            Text("Eval: ${_evalString(pv)}"),
+
+            const SizedBox(height: 12),
+
+            // MOTIFS
+            Text("Motifs (final position):",
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+
+            Text("• Pawn Islands (W/B): "
+                "${finalMotif.whitePawnIslands} / ${finalMotif.blackPawnIslands}"),
+
+            Text("• Queenside Majority (W/B): "
+                "${finalMotif.whiteQueensideMajority} / "
+                "${finalMotif.blackQueensideMajority}"),
+
+            Text("• Pawn Structure (White): "
+                "iso ${finalMotif.whitePawnStructure['isolated']}, "
+                "dbl ${finalMotif.whitePawnStructure['doubled']}, "
+                "tri ${finalMotif.whitePawnStructure['tripled']}"),
+
+            Text("• Pawn Structure (Black): "
+                "iso ${finalMotif.blackPawnStructure['isolated']}, "
+                "dbl ${finalMotif.blackPawnStructure['doubled']}, "
+                "tri ${finalMotif.blackPawnStructure['tripled']}"),
+
+            Text("• Endgame Type: ${finalMotif.endgameType}"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _evalString(PvLine pv) {
+  if (pv.scoreType == "cp") {
+    return (pv.score / 100).toStringAsFixed(2);
+  } else {
+    return "Mate ${pv.score}";
+  }
+}
 
   List<String> _createMultipleFENs(String pgn) {
     final chess = ChessLibrary.Chess();
@@ -102,7 +186,6 @@ class _ChessGUIState extends State<ChessGUI> {
   @override
   Widget build(BuildContext context) {
     final fen = _fens[_currentIndex];
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -113,8 +196,6 @@ class _ChessGUIState extends State<ChessGUI> {
           fen: fen,
         ),
         const SizedBox(height: 12),
-        if (_bestMove != null)
-          Text('Best move: $_bestMove', style: const TextStyle(fontSize: 14)),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -123,6 +204,14 @@ class _ChessGUIState extends State<ChessGUI> {
             IconButton(onPressed: _next, icon: const Icon(Icons.arrow_forward)),
           ],
         ),
+        if (_motifResults != null)
+          ..._analysis!.lines.entries.map((entry) {
+            final pvIndex = entry.key;
+            final pv = entry.value;
+
+            final motifs = _motifResults![pvIndex]!;
+            return _buildPvDisplay(pv, motifs);
+          }),
       ],
     );
   }

@@ -55,70 +55,72 @@ class _ChessAppState extends State<ChessApp> {
                 Text('Starting Stockfish engine...'),
                 ],
             )
-          :Padding(
-            padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey, // define GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Enter a FEN or PGN string:',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _fenController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'FEN',
+          :SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey, // define GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Enter a FEN or PGN string:',
+                      style: TextStyle(fontSize: 18),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _pgnController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'PGN',
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _fenController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'FEN',
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final fen = _fenController.text.trim();
-                      final pgn = _pgnController.text.trim();
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _pgnController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: 'PGN',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final fen = _fenController.text.trim();
+                        final pgn = _pgnController.text.trim();
 
-                      if (fen.isEmpty && pgn.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter either a FEN or PGN.')),
-                        );
-                        return;
-                      }
-
-                      if (fen.isNotEmpty) {
-                        if (_engine.isReady.value) {
-                          setState(() {
-                            _userFen = fen;
-                            _userPgn = ''; // clear PGN if FEN entered
-                          });
-                        } else {
+                        if (fen.isEmpty && pgn.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Engine is not ready yet.')),
+                            const SnackBar(content: Text('Please enter either a FEN or PGN.')),
                           );
+                          return;
                         }
-                      } else if (pgn.isNotEmpty) {
-                        setState(() {
-                          _userPgn = pgn;
-                          _userFen = ''; // clear FEN if PGN entered
-                        });
-                      }
-                    },
-                    child: const Text('Submit Position'),
-                  ),
-                  const SizedBox(height: 20),
-                  ChessGUI(stockfish: _engine, fen: _userFen, pgn: _userPgn),
-                ],
-              ),
+
+                        if (fen.isNotEmpty) {
+                          if (_engine.isReady.value) {
+                            setState(() {
+                              _userFen = fen;
+                              _userPgn = ''; // clear PGN if FEN entered
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Engine is not ready yet.')),
+                            );
+                          }
+                        } else if (pgn.isNotEmpty) {
+                          setState(() {
+                            _userPgn = pgn;
+                            _userFen = ''; // clear FEN if PGN entered
+                          });
+                        }
+                      },
+                      child: const Text('Submit Position'),
+                    ),
+                    const SizedBox(height: 20),
+                    ChessGUI(stockfish: _engine, fen: _userFen, pgn: _userPgn),
+                  ],
+                ),
+              )
             )
           );
         }) 
