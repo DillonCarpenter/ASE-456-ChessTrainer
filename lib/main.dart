@@ -78,9 +78,12 @@ class _ChessAppState extends State<ChessApp> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _pgnController,
+                      enabled: false, // disables input
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: 'PGN',
+                        labelText: 'PGN (coming soon)',
+                        hintText: 'PGN support is not available yet',
+                        filled: true,
                       ),
                     ),
                     const SizedBox(height: 16),

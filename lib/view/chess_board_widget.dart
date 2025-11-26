@@ -165,13 +165,15 @@ class _ChessGUIState extends State<ChessGUI> {
     return "Mate ${pv.score}";
   }
 }
-
+  //Postponed for now
   List<String> _createMultipleFENs(String pgn) {
     final chess = ChessLibrary.Chess();
-    chess.load_pgn(pgn);
+    //For whatever reason, the chess.dart package has trouble with the PGN's I give it so this feature had to be postponed.
+    bool status = chess.load_pgn(pgn);
     final moves = chess.history;
-    print("moves");
-    print(moves.length);
+    debugPrint("moves");
+    debugPrint(moves.length.toString());
+    debugPrint(status.toString());
     final chess1 = ChessLibrary.Chess();
 
     var FENS = moves.map((move) {

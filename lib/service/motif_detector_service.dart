@@ -1,6 +1,7 @@
 import 'package:chess_trainer/model/stockfish_data_model.dart';
 import 'package:chess/chess.dart';
 import 'package:chess_trainer/model/motif_model.dart';
+import 'package:flutter/widgets.dart';
 class MotifDetector {
   final EngineAnalysis analysis;
 
@@ -44,8 +45,15 @@ class MotifDetector {
 
     final fens = <String>[];
     for (final move in pv) {
-      chess.move(move); // permissive parser handles UCI moves
+      bool result = chess.move({
+        "from": move.substring(0, 2), // d2
+        "to": move.substring(2, 4),   // d4
+        "promotion": move.length == 5 ? move[4] : null
+      });
       fens.add(chess.fen); // save the FEN after the move
+      if(result == false){
+        debugPrint('Move $move could not be made.');
+      }
     }
 
     return fens;
