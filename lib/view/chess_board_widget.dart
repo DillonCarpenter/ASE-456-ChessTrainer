@@ -170,7 +170,7 @@ class _ChessGUIState extends State<ChessGUI> {
     final chess = ChessLibrary.Chess();
     //For whatever reason, the chess.dart package has trouble with the PGN's I give it so this feature had to be postponed.
     bool status = chess.load_pgn(pgn);
-    final moves = chess.history;
+    final moves = chess.getHistory();
     debugPrint("moves");
     debugPrint(moves.length.toString());
     debugPrint(status.toString());
