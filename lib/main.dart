@@ -3,7 +3,7 @@ import 'package:dartchess/dartchess.dart'; //FEN to PGN and vise versa
 import 'package:chessground/chessground.dart'; //UI
 import 'dart:async';
 import 'package:chess_trainer/service/stockfish_service.dart'; // gives us Stockfish, StockfishFlavor, StockfishState through abstraction
-import 'package:chess_trainer/view/chess_board_widget.dart';
+import 'package:chess_trainer/widgets/chess_board_widget.dart';
 
 void main() => runApp(const ChessApp());
 

@@ -27,7 +27,6 @@ class ChessGUI extends StatefulWidget {
 class _ChessGUIState extends State<ChessGUI> {
   late List<String> _fens;
   int _currentIndex = 0;
-  String? _bestMove;
   Map<int, List<Motif>>? _motifResults;
   EngineAnalysis? _analysis;
 
@@ -79,7 +78,6 @@ class _ChessGUIState extends State<ChessGUI> {
 
     // 2. Store everything in state
     setState(() {
-      _bestMove = analysis.bestMove;
       _motifResults = motifs;
       _analysis = analysis; // optional, if not already stored
     });
