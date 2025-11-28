@@ -18,6 +18,12 @@ paginate: true
 
 ---
 
+## Platform
+- Android or iOS device or emulator is needed
+- Android Studio is Recommended
+
+---
+
 ## Input Options
 
 ### FEN (Recommended)
@@ -80,9 +86,8 @@ paginate: true
 
 For questions or issues:
 
-- Email: car
-- Documentation: [chess-trainer.com/docs](https://chess-trainer.com/docs)  
-- Updates: App Store / Google Play
+- Email: carpenterd5@nku.edu
+- Documentation: [Chess Trainer Docs](https://github.com/DillonCarpenter/ASE-456-ChessTrainer/tree/main/Docs) 
 
 ---
 
